@@ -1,0 +1,42 @@
+{
+    "name": "咩咩采集",
+    "version": "0.0.1",
+    "manifest_version": 2,
+    "description": "Save Picture",
+    "icons": {
+        "16": "icons/launcher.png",
+        "32": "icons/launcher.png",
+        "48": "icons/launcher.png",
+        "128": "icons/launcher.png"
+    },
+    "browser_action": {
+        "default_popup": "popup/index.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "lib/jquery.min.js",
+                "lib/mousetrap.min.js",
+                "lib/anime.min.js",
+                "content/index.js"
+            ],
+            "css": [
+                "content/index.css"
+            ]
+        }
+    ],
+    "background": {
+        "persistent": false,
+        "scripts": [
+            "background/index.js"
+        ]
+    },
+    "permissions": [
+        "<all_urls>",
+        "storage",
+        "downloads"
+    ]
+}
