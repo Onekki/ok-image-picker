@@ -9,29 +9,39 @@ a:hover {
 }
 
 .ok-card {
-    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 8px 0 #ccc;
     transition: 0.3s;
     border-radius: 5px;
 }
 
 .ok-card:hover {
-    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 16px 0 #ccc;
 }
 
-.ok-container {
+.ok-float {
     position: fixed;
     bottom: 16px;
     right: 16px;
     z-index: 2147483647;
+}
 
+.ok-list {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: auto;
+    min-width: 144px;
+}
+
+.ok-container {
     display: flex;
     flex-direction: row;
     align-items: center;
     padding: 12px;
-    opacity: 0;
 
     min-width: 144px;
-    background-color: rgba(255, 255, 255, 0.6);
+    background-color: #eee;
+    margin-top: 8px;
 }
 
 .ok-left {
