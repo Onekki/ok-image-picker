@@ -62,7 +62,6 @@ function pop(request) {
             action: 'open'
         })
     })
-    container.addClass('.' + request.id)
     if (request.success) {
         container.find('.ok-status').text('保存成功')
         container.find('.ok-status').css('color', '#06ae56')
@@ -74,14 +73,6 @@ function pop(request) {
     }
     $('body').append(container)
 
-    anime({
-        targets: $('.' + request.id),
-        translateX: 48,
-        duration: 500,
-        opacity: 0,
-        easing: 'easeInOutQuad'
-    })
-
     const complete = () => {
         setTimeout(() => container.remove(), 3000)
 
@@ -92,21 +83,27 @@ function pop(request) {
     }
 
     if (target) {
-        const imgOffset = $('.ok-img').offset()
         const targetOffset = $(target).offset()
-        const aAnime = anime({
-            targets: [target],
-            scale: 48 / target.width,
-            translateX: imgOffset.left - targetOffset.left,
-            translateY: imgOffset.top - targetOffset.top,
-            opacity: 0,
-            duration: 500,
-            easing: 'easeInOutQuad',
-            complete: () => {
-                complete()
-                aAnime.reset()
-                $(target).css('opacity', 0.5)
-            }
+        const imgOffset = $('.ok-img').offset()
+        console.log($(target).offset(), $('.ok-img').offset())
+        const animeTarget = $('<img class="ok-anime-img" src="' + target.currentSrc + '" />')
+        animeTarget.attr('width', $(target).width())
+        animeTarget.attr('height', $(target).height())
+        animeTarget.attr('object-fit', 'contain')
+        animeTarget.css('position', 'absolute')
+        animeTarget.css('left', targetOffset.left)
+        animeTarget.css('top', targetOffset.top)
+        animeTarget.css('z-index', 2147483647)
+        $('body').append(animeTarget)
+
+        console.log(imgOffset.left - targetOffset.left, imgOffset.top - targetOffset.top)
+        animeTarget.animate({
+            width: '48px', height: '48px', position: 'absolute',
+            left: imgOffset.left + 'px', top: imgOffset.top + 'px'
+        }, 'normal', 'linear', () => {
+            complete()
+            $(target).css('opacity', 0.5)
+            animeTarget.remove()
         })
     } else {
         complete()

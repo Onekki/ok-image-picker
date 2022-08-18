@@ -20,8 +20,8 @@ a:hover {
 
 .ok-float {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
+    bottom: 32px;
+    right: 32px;
     z-index: 2147483647;
 }
 
@@ -30,23 +30,25 @@ a:hover {
     flex-direction: column;
     justify-content: space-between;
     height: auto;
-    min-width: 144px;
+    min-width: 256px;
 }
 
 .ok-container {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 12px;
+    padding: 16px 32px;
 
-    min-width: 144px;
-    background-color: #eee;
+    min-width: 256px;
+    background-color: white;
     margin-top: 8px;
 }
 
 .ok-left {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
+
+    background-color: whitesmoke;
 }
 
 .ok-img {
@@ -67,6 +69,6 @@ a:hover {
 }
 
 .ok-open {
-    color: #10aeff;
-    margin-top: 2px;
+    color: #fa9d3b;
+    margin-top: 8px;
 }
