@@ -25,35 +25,13 @@ function checkRuleUpdates() {
     })
 }
 
-function convertSrc(src) {
-    if (-1 < src.indexOf("data:image"))
-        return src;
-    if (cacheRules && cacheRules.rules)
-        for (var i = 0; i < cacheRules.rules.length; i++)
-            try {
-                var rule = cacheRules.rules[i]
-                  , srcPattern = rule.srcPattern
-                  , replaceRule = rule.replaceRule
-                  , reg = RegExp(srcPattern);
-                if (reg.test(src)) {
-                    var newSrc, script = replaceRule.replace("'@'", "src");
-                    return eval("newSrc = ".concat(script)),
-                    newSrc
-                }
-            } catch (err) {
-                return src
-            }
-    console.log(src)
-    return src
-}
-
 checkRuleUpdates()
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(request, sender)
     if (request.action === 'download') {
         chrome.downloads.download({ 
-            url: convertSrc(request.url)
+            url: request.url
         }, (downloadId) => {
             sendResponse({ downloadId })
         })
