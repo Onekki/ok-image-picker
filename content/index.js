@@ -1,25 +1,3 @@
-function convertSrc(src) {
-    if (-1 < src.indexOf("data:image"))
-        return src;
-    if (cacheRules && cacheRules.rules)
-        for (var i = 0; i < cacheRules.rules.length; i++)
-            try {
-                var rule = cacheRules.rules[i]
-                  , srcPattern = rule.srcPattern
-                  , replaceRule = rule.replaceRule
-                  , reg = RegExp(srcPattern);
-                if (reg.test(src)) {
-                    var newSrc, script = replaceRule.replace("'@'", "src");
-                    return eval("newSrc = ".concat(script)),
-                    newSrc
-                }
-            } catch (err) {
-                return src
-            }
-    console.log(src)
-    return src
-}
-
 const divs = {}
 $(document).ready(() => {
     $('body').append('<div class="ok-list ok-card ok-float"></div>')
@@ -32,7 +10,7 @@ $(document).ready(() => {
             if (e.target && e.target.currentSrc) {
                 chrome.runtime.sendMessage({
                     action: 'download',
-                    url: convertSrc(e.target.currentSrc)
+                    url: e.target.currentSrc
                 }, (response) => {
                     console.log('download', response)
                     if (response && response.downloadId) {
@@ -77,7 +55,7 @@ function pop(request) {
     isRunning = true
     const target = divs[request.id]
     const container = $('<div class="ok-container ok-card ok-float"><div class="ok-left"><img width="100%" height="100%" class="ok-img" /></div><div class="ok-space"></div><div class="ok-right"><div class="ok-status"></div><a class="ok-open">打开目录</a></div></div>')
-    if (target && target.currentSrc) container.find('.ok-img').attr('src', convertSrc(target.currentSrc))
+    if (target && target.currentSrc) container.find('.ok-img').attr('src', target.currentSrc)
     container.find('.ok-open').click((e) => {
         console.log('ok-open', e)
         chrome.runtime.sendMessage({ 
@@ -108,7 +86,7 @@ function pop(request) {
         const targetOffset = $(target).offset()
         const imgOffset = $('.ok-img').offset()
         console.log($(target).offset(), $('.ok-img').offset())
-        const animeTarget = $('<img class="ok-anime-img" src="' + convertSrc(target.currentSrc) + '" />')
+        const animeTarget = $('<img class="ok-anime-img" src="' + target.currentSrc + '" />')
         animeTarget.attr('width', $(target).width())
         animeTarget.attr('height', $(target).height())
         animeTarget.attr('object-fit', 'contain')
