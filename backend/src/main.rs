@@ -1,6 +1,6 @@
 #![windows_subsystem = "windows"]
 
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
 use serde_json::json;
 use tao::{
     event::Event,
