@@ -1,0 +1,114 @@
+let cacheRules = { rule_version: 0 }
+
+function fetchStorageConfig() {
+    return new Promise((resolve, reject) => {
+        chrome.storage.local.get('defaultDirectory', (result) => {
+            console.log(result)
+            if (result && result.defaultDirectory) {
+                resolve(result.defaultDirectory)
+            } else {
+                resolve('~\\Downloads')
+            }
+        })
+    })
+}
+
+function fetchAssetsRules() {
+    const sieveURL = chrome.runtime.getURL('assets/sieve.json')
+    return fetch(sieveURL).then((response) => {
+        return response.json()
+    }).then(json => {
+        console.log('fetchAssetsConfig', json)
+        if (json && json.rule_version && 
+            cacheRules && cacheRules.rule_version && 
+            cacheRules.rule_version < json.rule_version) {
+            cacheRules = json;
+        }
+    })
+}
+
+function fetchRemoteRules() {
+    const remoteSieveURL = 'https://billfish-resource-oss.oss-cn-hangzhou.aliyuncs.com/extension/sieve.json'
+    return fetch(remoteSieveURL).then((response) => {
+        return response.json()
+    }).then((json) => {
+        console.log('fetchRemoteConfig', json)
+        if (json && json.rule_version &&
+            cacheRules && cacheRules.rule_version && 
+            cacheRules.rule_version < json.rule_version) {
+            cacheRules = json;
+        }
+    })
+}
+
+function convertSrc(src) {
+    if (-1 < src.indexOf('data:image'))
+        return src;
+    if (cacheRules && cacheRules.rules)
+        for (var i = 0; i < cacheRules.rules.length; i++)
+            try {
+                var rule = cacheRules.rules[i]
+                  , srcPattern = rule.srcPattern
+                  , replaceRule = rule.replaceRule
+                  , reg = RegExp(srcPattern);
+                if (reg.test(src)) {
+                    var newSrc, script = replaceRule.replace('"@"', 'src');
+                    return eval('newSrc = '.concat(script)),
+                    newSrc
+                }
+            } catch (err) {
+                return src
+            }
+    console.log(src)
+    return src
+}
+
+fetchAssetsRules().then(() => fetchRemoteRules())
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    console.log(request, sender)
+    if (request.action === 'checkRulesUpdate') {
+        fetchAssetsRules().then(() => fetchRemoteRules())
+    } else if (request.action === 'download') {
+        fetchStorageConfig()
+            .then((defaultDirectory) => {
+                const url = request.url
+                const filename = url.split('/').pop().split('?')[0]
+                const savePath = defaultDirectory + '\\' + filename
+                return fetch('http://127.0.0.1:8080/download?save_path=' + savePath + '&url=' + url)
+            }).then(response => {
+                return response.json()
+            }).then(json => {
+                console.log(json)
+                sendResponse(json)
+            }).catch(error => {
+                console.log(error)
+                sendResponse({ error: '请检查下载服务是否开启' })
+            })
+    } else if (request.action === 'changeDefaultDirectory') {
+        fetch('http://127.0.0.1:8080/changeDefaultDirectory')
+            .then(response => {
+                return response.json()
+            }).then(json => {
+                console.log(json)
+                sendResponse(json)
+            }).catch(error => {
+                console.log(error)
+                sendResponse({ error: '请检查下载服务是否开启' })
+            })
+    } else if (request.action === 'showDefaultDirectory') {
+        fetchStorageConfig()
+            .then((defaultDirectory) => {
+                return fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
+            }).then(response => {
+                return response.json()
+            }).then(json => {
+                console.log(json)
+                sendResponse(json)
+            }).catch(error => {
+                console.log(error)
+                sendResponse({ error: '请检查下载服务是否开启' })
+            })
+    }
+    return !!request.action
+})
