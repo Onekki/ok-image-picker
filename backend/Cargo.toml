@@ -2,8 +2,11 @@
 name = "ok-image-picker"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[build-dependencies]
+winres = "0.1.12"
 
 [dependencies]
 reqwest = { version = "0.11", features = ["json", "blocking"] }
@@ -14,6 +17,7 @@ tao = "0.13.3"
 image = "0.24.2"
 shellexpand = "2.1.2"
 native-dialog = "0.6.3"
+auto-launch = "0.3.0"
 
 [features]
 default = [ "tray" ]

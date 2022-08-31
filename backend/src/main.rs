@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use serde_json::json;
 use tao::{
@@ -11,7 +13,16 @@ use tao::{
 
 use native_dialog::FileDialog;
 
-use std::{collections::HashMap, fs::File, io::Write, thread, process::Command};
+use auto_launch::{AutoLaunchBuilder};
+
+use std::{
+    collections::HashMap, 
+    fs::File, 
+    io::Write, 
+    thread, 
+    process::Command,
+    env::current_exe
+};
 
 #[get("/")]
 async fn hello() -> impl Responder {
@@ -91,10 +102,26 @@ async fn start_server() -> std::io::Result<()> {
 fn main() {
     thread::spawn(start_server);
 
-    let path = concat!(env!("CARGO_MANIFEST_DIR"), "\\icon.png");
-    println!("{}", path);
+    let app_name = "咩咩采集-下载器";
+
+    let current_exe = current_exe();
+    let app_path = current_exe.unwrap()
+        .canonicalize().unwrap()
+        .display().to_string();
+
+    let auto = AutoLaunchBuilder::new()
+        .set_app_name(app_name)
+        .set_app_path(&app_path)
+        .set_use_launch_agent(true)
+        .build()
+        .unwrap();
+
+    auto.enable().unwrap();
+    auto.is_enabled().unwrap();
+
+    let bytes = include_bytes!("..\\assets\\icon.png");
     let (icon_rgba, icon_width, icon_height) = {
-        let image = image::open(path)
+        let image = image::load_from_memory(bytes)
             .expect("Failed to open icon path")
             .into_rgba8();
         let (width, height) = image.dimensions();
