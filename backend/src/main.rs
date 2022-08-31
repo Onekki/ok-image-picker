@@ -24,20 +24,6 @@ use std::{
     env::current_exe
 };
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
-}
-
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
-
 fn abspath(p: &str) -> String {
     shellexpand::full(p).ok().unwrap().to_string()
 }
@@ -85,10 +71,7 @@ async fn show_default_directory(query: web::Query<HashMap<String, String>>) -> i
 async fn start_server() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(hello)
-            .service(echo)
             .route("/download", web::get().to(download))
-            .route("/hey", web::get().to(manual_hello))
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
     })
