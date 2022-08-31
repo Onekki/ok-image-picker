@@ -20,7 +20,7 @@ $(document).ready(() => {
                 console.log(target)
             }
             if (target && !target.currentSrc) {
-                const imgs = $(target).siblings().find('img')
+                const imgs = $(target).parent().find('img')
                 if (imgs && imgs.length > 0) {
                     target = imgs[0]
                 }
