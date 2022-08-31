@@ -72,11 +72,15 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'download') {
         fetchStorageConfig()
             .then((defaultDirectory) => {
-                const url = request.url
-                const filename = url.split('?')[0].split('/').pop()
+                const url = convertSrc(request.url)
+                console.log(url)
+                let filename = url.split('?')[0].split('/').pop()
                     .replace(/\.png.*/, '.png').replace(/\.jpg.*/, '.jpg')
                     .replace(/\.jpeg.*/, '.jpeg').replace(/\.bmp.*/, '.bmp')
-                    .replace(/\.gif.*/, '.gif')
+                    .replace(/\.gif.*/, '.gif').replace('\.webp.*', '.webp')
+                if (url.includes('huaban.com')) {
+                    filename = filename.replace('webp', '.webp')
+                }
                 const savePath = defaultDirectory + '\\' + filename
                 return fetch('http://127.0.0.1:8080/download?save_path=' + savePath + '&url=' + url)
             }).then(response => {
