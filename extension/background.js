@@ -73,7 +73,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         fetchStorageConfig()
             .then((defaultDirectory) => {
                 const url = request.url
-                const filename = url.split('/').pop().split('?')[0]
+                const filename = url.split('?')[0].split('/').pop()
+                    .replace(/\.png.*/, '.png').replace(/\.jpg.*/, '.jpg')
+                    .replace(/\.jpeg.*/, '.jpeg').replace(/\.bmp.*/, '.bmp')
+                    .replace(/\.gif.*/, '.gif')
                 const savePath = defaultDirectory + '\\' + filename
                 return fetch('http://127.0.0.1:8080/download?save_path=' + savePath + '&url=' + url)
             }).then(response => {

@@ -10,22 +10,37 @@ $(document).ready(() => {
             e.preventDefault()
             e.stopPropagation()
             e.stopImmediatePropagation()
-            console.log(e.target)
-            if (e.target && e.target.currentSrc) {
+            let target = e.target
+            console.log(target)
+            if (target && !target.currentSrc) {
+                const imgs = $(target).find('img')
+                if (imgs && imgs.length > 0) {
+                    target = imgs[0]
+                }
+                console.log(target)
+            }
+            if (target && !target.currentSrc) {
+                const imgs = $(target).siblings().find('img')
+                if (imgs && imgs.length > 0) {
+                    target = imgs[0]
+                }
+                console.log(target)
+            }
+            if (target && target.currentSrc) {
                 chrome.runtime.sendMessage({
                     action: 'download',
-                    url: e.target.currentSrc
+                    url: target.currentSrc
                 }, response => {
                     console.log(response)
                     if (response.error) {
                         download(response)
                     } else {
-                        divs[divs.length] = e.target
+                        divs[divs.length] = target
                         download({ id: divs.length })
                     }
                 })
             } else {
-                download({ error: '点击位置不是图片' })
+                download({ error: '无法检测到图片' })
             }
             return false
         }
