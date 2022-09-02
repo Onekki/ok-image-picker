@@ -3,8 +3,19 @@ chrome.runtime.sendMessage({
 })
 
 $(document).ready(() => {
+    window.addEventListener("mousedown", (e) => {
+        if (e && e.altKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            e.stopImmediatePropagation()
+            return false
+        }
+    })
     window.addEventListener("mouseup", (e) => {
         if (e && e.altKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            e.stopImmediatePropagation()
             let target = e.target
             console.log(target, target.currentSrc)
             if (target && !target.currentSrc) {
@@ -22,35 +33,17 @@ $(document).ready(() => {
                 console.log(target, target.currentSrc)
             }
             if (target && target.currentSrc) {
-                const okLoading = $('<div class="ok-loading"></div>')
-                okLoading.css('width', '8px')
-                okLoading.css('height', '8px')
-                okLoading.css('position', 'absolute')
-                okLoading.css('left', $(target).offset().left)
-                okLoading.css('top', $(target).offset().top)
-                okLoading.css('z-index', 2147483647)
-                okLoading.css('background', '#36395A')
-                $('body').append(okLoading)
-                const animateLoading = () => {
-                    okLoading.animate({
-                        left: ($(target).offset().left + $(target).width() - 8) + 'px'
-                    }, $(target).width() * 2, 'linear', () => {
-                        okLoading.animate({
-                            top: ($(target).offset().top + $(target).height() - 8) + 'px'
-                        }, $(target).height() * 2, 'linear', () => {
-                            okLoading.animate({
-                                left: $(target).offset().left
-                            }, $(target).width() * 2, 'linear', () => {
-                                okLoading.animate({
-                                    top: $(target).offset().top
-                                }, $(target).height() * 2, 'linear', () => {
-                                    animateLoading()
-                                })
-                            })
-                        })
-                    })
-                }
-                animateLoading()
+                const loading = $('<div class="ok-loading"></div>')
+                loading.css('width', 'fit-content')
+                loading.css('position', 'absolute')
+                loading.css('padding', '4px')
+                loading.css('left', $(target).offset().left)
+                loading.css('top', $(target).offset().top)
+                loading.css('z-index', 2147483647)
+                loading.css('color', 'white')  
+                loading.text('正在保存')
+                loading.css('background', '#cccccc80')
+                $('body').append(loading)
 
                 chrome.runtime.sendMessage({
                     action: 'download',
@@ -58,14 +51,22 @@ $(document).ready(() => {
                 }, response => {
                     console.log(response)
                     if (response.error) {
-                        download(response)
+                        download({ error: response.error, loading: loading })
                     } else {
-                        download({ target: target, loading: okLoading })
+                        download({ target: target, loading: loading })
                     }
                 })
             } else {
                 download({ error: '无法检测到图片' })
             }
+            return false
+        }
+    })
+    window.addEventListener("click", (e) => {
+        if (e && e.altKey) {
+            e.preventDefault()
+            e.stopPropagation()
+            e.stopImmediatePropagation()
             return false
         }
     })
@@ -93,9 +94,13 @@ function download({ target, loading, error }) {
         container.find('.ok-status').css('color', '#fa5151')
         container.find('.ok-img').css('background-color', '#aaa')
         container.find('.ok-img').css('border-radius', '8px')
+        loading.text('保存失败')
+        loading.css('background', '#fa515180')
     } else {
         container.find('.ok-status').text('保存成功')
         container.find('.ok-status').css('color', '#06ae56')
+        loading.text('保存成功')
+        loading.css('background', '#06ae5680')
     }
     $('body').append(container)
 
@@ -106,7 +111,7 @@ function download({ target, loading, error }) {
         queue.pop()
         if (queue.length > 0) pop(queue[0])
     }
-    if (loading) loading.remove()
+    
     if (target) {
         const animeTarget = $('<img class="ok-anime-img" src="' + target.currentSrc + '" />')
         animeTarget.attr('width', $(target).width())
