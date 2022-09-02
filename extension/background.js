@@ -90,7 +90,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse(json)
             }).catch(error => {
                 console.log(error)
-                sendResponse({ error: '请检查下载服务是否开启' })
+                sendResponse({ error: error.message })
             })
     } else if (request.action === 'changeDefaultDirectory') {
         fetch('http://127.0.0.1:8080/changeDefaultDirectory')
@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse(json)
             }).catch(error => {
                 console.log(error)
-                sendResponse({ error: '请检查下载服务是否开启' })
+                sendResponse({ error: error.message })
             })
     } else if (request.action === 'showDefaultDirectory') {
         fetchStorageConfig()
@@ -114,7 +114,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse(json)
             }).catch(error => {
                 console.log(error)
-                sendResponse({ error: '请检查下载服务是否开启' })
+                sendResponse({ error: error.message })
             })
     }
     return !!request.action

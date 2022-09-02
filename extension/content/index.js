@@ -2,31 +2,56 @@ chrome.runtime.sendMessage({
     action: 'checkRulesUpdate'
 })
 
-const divs = {}
 $(document).ready(() => {
-    $('body').append('<div class="ok-list ok-card ok-float"></div>')
-    window.addEventListener("mousedown", (e) => {
+    window.addEventListener("mouseup", (e) => {
         if (e && e.altKey) {
-            e.preventDefault()
-            e.stopPropagation()
-            e.stopImmediatePropagation()
             let target = e.target
-            console.log(target)
+            console.log(target, target.currentSrc)
             if (target && !target.currentSrc) {
                 const imgs = $(target).find('img')
                 if (imgs && imgs.length > 0) {
                     target = imgs[0]
                 }
-                console.log(target)
+                console.log(target, target.currentSrc)
             }
             if (target && !target.currentSrc) {
                 const imgs = $(target).parent().find('img')
                 if (imgs && imgs.length > 0) {
                     target = imgs[0]
                 }
-                console.log(target)
+                console.log(target, target.currentSrc)
             }
             if (target && target.currentSrc) {
+                const okLoading = $('<div class="ok-loading"></div>')
+                okLoading.css('width', '8px')
+                okLoading.css('height', '8px')
+                okLoading.css('position', 'absolute')
+                okLoading.css('left', $(target).offset().left)
+                okLoading.css('top', $(target).offset().top)
+                okLoading.css('z-index', 2147483647)
+                okLoading.css('background', '#36395A')
+                $('body').append(okLoading)
+                const animateLoading = () => {
+                    okLoading.animate({
+                        left: ($(target).offset().left + $(target).width() - 8) + 'px'
+                    }, $(target).width() * 2, 'linear', () => {
+                        okLoading.animate({
+                            top: ($(target).offset().top + $(target).height() - 8) + 'px'
+                        }, $(target).height() * 2, 'linear', () => {
+                            okLoading.animate({
+                                left: $(target).offset().left
+                            }, $(target).width() * 2, 'linear', () => {
+                                okLoading.animate({
+                                    top: $(target).offset().top
+                                }, $(target).height() * 2, 'linear', () => {
+                                    animateLoading()
+                                })
+                            })
+                        })
+                    })
+                }
+                animateLoading()
+
                 chrome.runtime.sendMessage({
                     action: 'download',
                     url: target.currentSrc
@@ -35,8 +60,7 @@ $(document).ready(() => {
                     if (response.error) {
                         download(response)
                     } else {
-                        divs[divs.length] = target
-                        download({ id: divs.length })
+                        download({ target: target, loading: okLoading })
                     }
                 })
             } else {
@@ -45,34 +69,17 @@ $(document).ready(() => {
             return false
         }
     })
-    window.addEventListener("mouseup", (e) => {
-        if (e && e.altKey) {
-            e.preventDefault()
-            e.stopPropagation()
-            e.stopImmediatePropagation()
-            return false
-        }
-    })
-    window.addEventListener("click", (e) => {
-        if (e && e.altKey) {
-            e.preventDefault()
-            e.stopPropagation()
-            e.stopImmediatePropagation()
-            return false
-        }
-    })
 })
 
 let isRunning = false
 let queue = []
 
-function download({ id, error }) {
+function download({ target, loading, error }) {
     if (isRunning) {
-        queue.push({ id, error })
+        queue.push({ target, loading, error })
         return
     }
     isRunning = true
-    const target = divs[id]
     const container = $('<div class="ok-container ok-card ok-float"><div class="ok-left"><img width="100%" height="100%" class="ok-img" /></div><div class="ok-space"></div><div class="ok-right"><div class="ok-status"></div><a class="ok-open">打开目录</a></div></div>')
     if (target && target.currentSrc) container.find('.ok-img').attr('src', target.currentSrc)
     container.find('.ok-open').click((e) => {
@@ -97,31 +104,27 @@ function download({ id, error }) {
 
         isRunning = false
         queue.pop()
-        divs[id] = null
         if (queue.length > 0) pop(queue[0])
     }
-
+    if (loading) loading.remove()
     if (target) {
-        const targetOffset = $(target).offset()
-        const imgOffset = $('.ok-img').offset()
-        console.log($(target).offset(), $('.ok-img').offset())
         const animeTarget = $('<img class="ok-anime-img" src="' + target.currentSrc + '" />')
         animeTarget.attr('width', $(target).width())
         animeTarget.attr('height', $(target).height())
         animeTarget.attr('object-fit', 'contain')
         animeTarget.css('position', 'absolute')
-        animeTarget.css('left', targetOffset.left)
-        animeTarget.css('top', targetOffset.top)
+        animeTarget.css('left', $(target).offset().left + 'px')
+        animeTarget.css('top', $(target).offset().top + 'px')
         animeTarget.css('z-index', 2147483647)
         $('body').append(animeTarget)
 
-        console.log(imgOffset.left - targetOffset.left, imgOffset.top - targetOffset.top)
         animeTarget.animate({
-            width: '48px', height: '48px', position: 'absolute',
-            left: imgOffset.left + 'px', top: imgOffset.top + 'px'
+            width: '48px', 
+            height: '48px',
+            left: $('.ok-img').offset().left + 'px', 
+            top: $('.ok-img').offset().top + 'px'
         }, 'normal', 'linear', () => {
             complete()
-            $(target).css('opacity', 0.5)
             animeTarget.remove()
         })
     } else {

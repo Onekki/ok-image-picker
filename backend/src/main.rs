@@ -1,11 +1,22 @@
-#![windows_subsystem = "windows"]
-
-use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{
+    web, 
+    App, 
+    HttpResponse, 
+    HttpServer, 
+    Responder,
+    middleware::Logger
+};
 use serde_json::json;
 use tao::{
     event::Event,
-    event_loop::{ControlFlow, EventLoop},
-    menu::{ContextMenu as Menu, MenuItemAttributes},
+    event_loop::{
+        ControlFlow, 
+        EventLoop
+    },
+    menu::{
+        ContextMenu as Menu,
+        MenuItemAttributes
+    },
     system_tray::SystemTrayBuilder,
     window::Icon,
     TrayId,
@@ -13,7 +24,7 @@ use tao::{
 
 use native_dialog::FileDialog;
 
-use auto_launch::{AutoLaunchBuilder};
+use auto_launch::AutoLaunchBuilder;
 
 use std::{
     collections::HashMap, 
@@ -29,18 +40,42 @@ fn abspath(p: &str) -> String {
 }
 
 async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder {
-    let save_path = query.get("save_path").unwrap();
-    let url = query.get("url").unwrap();
-    println!(
-        "save_path: {} url: {} abspath: {:?}",
-        save_path,
-        url,
-        abspath(save_path)
-    );
-    let response = reqwest::get(url).await.unwrap();
-    let mut file = File::create(abspath(save_path)).unwrap();
-    let mut contents = response.bytes().await.unwrap();
-    file.write_all(&mut contents).unwrap();
+    let save_path = match query.get("save_path") {
+        Some(result) => result,
+        None => return HttpResponse::BadRequest().json(json!({
+            "error": "参数错误：save_path"
+        }))
+    };
+    let url = match query.get("url") {
+        Some(result) => result,
+        None => return HttpResponse::BadRequest().json(json!({
+            "error": "参数错误：url"
+        }))
+    };
+    let response = match reqwest::get(url).await {
+        Ok(result) => result,
+        Err(error) => return HttpResponse::Ok().json(json!({
+            "error": format!("{:?}", error)
+        }))
+    };
+    let mut file = match File::create(abspath(save_path)) {
+        Ok(result) => result,
+        Err(error) => return HttpResponse::Ok().json(json!({
+            "error": format!("{:?}", error)
+        }))
+    };
+    let mut contents = match response.bytes().await {
+        Ok(result) => result,
+        Err(error) => return HttpResponse::Ok().json(json!({
+            "error": format!("{:?}", error)
+        }))
+    };
+    match file.write_all(&mut contents) {
+        Ok(result) => result,
+        Err(error) => return HttpResponse::Ok().json(json!({
+            "error": format!("{:?}", error)
+        }))
+    };
     HttpResponse::Ok().json(json!({
         "save_path": save_path,
         "url": url
@@ -69,8 +104,13 @@ async fn show_default_directory(query: web::Query<HashMap<String, String>>) -> i
 
 #[actix_web::main]
 async fn start_server() -> std::io::Result<()> {
+
+    std::env::set_var("RUST_LOG", "actix_web=info");
+    env_logger::init();
+
     HttpServer::new(|| {
         App::new()
+            .wrap(Logger::default())
             .route("/download", web::get().to(download))
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
@@ -115,7 +155,7 @@ fn main() {
     let main_tray_id = TrayId::new("main-tray");
     let mut tray_menu = Menu::new();
 
-    let quit = tray_menu.add_item(MenuItemAttributes::new("Quit"));
+    let quit = tray_menu.add_item(MenuItemAttributes::new("退出应用"));
 
     let event_loop = EventLoop::new();
 
