@@ -109,7 +109,7 @@ function download({ target, loading, error }) {
 
         isRunning = false
         queue.pop()
-        if (queue.length > 0) pop(queue[0])
+        if (queue.length > 0) download(queue[0])
     }
     
     if (target) {
