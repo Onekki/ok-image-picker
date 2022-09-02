@@ -37,13 +37,13 @@ $(document).ready(() => {
                 loading.css('width', 'fit-content')
                 loading.css('position', 'absolute')
                 loading.css('padding', '4px')
-                loading.css('left', $(target).offset().left)
-                loading.css('top', $(target).offset().top)
-                loading.css('z-index', 2147483647)
+                loading.css('left', '0px')
+                loading.css('top', '0px')
+                loading.css('z-index', $(target).css('z-index'))
                 loading.css('color', 'white')  
                 loading.text('正在保存')
                 loading.css('background', '#cccccc80')
-                $('body').append(loading)
+                $(target).parent().append(loading)
 
                 chrome.runtime.sendMessage({
                     action: 'download',
@@ -94,13 +94,13 @@ function download({ target, loading, error }) {
         container.find('.ok-status').css('color', '#fa5151')
         container.find('.ok-img').css('background-color', '#aaa')
         container.find('.ok-img').css('border-radius', '8px')
-        loading.text('保存失败')
-        loading.css('background', '#fa515180')
+        if (loading) loading.text('保存失败')
+        if (loading) loading.css('background', '#fa515180')
     } else {
         container.find('.ok-status').text('保存成功')
         container.find('.ok-status').css('color', '#06ae56')
-        loading.text('保存成功')
-        loading.css('background', '#06ae5680')
+        if (loading) loading.text('保存成功')
+        if (loading) loading.css('background', '#06ae5680')
     }
     $('body').append(container)
 
