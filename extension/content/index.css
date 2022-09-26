@@ -69,3 +69,11 @@ a:hover {
     color: #fa9d3b;
     margin-top: 8px;
 }
+
+.ok-online-status {
+    width: 16px;
+    height: 16px;
+
+    background-color: #D6D6E7;
+    border-radius: 8px;
+}

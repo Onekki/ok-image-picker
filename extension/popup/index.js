@@ -6,9 +6,9 @@ document.addEventListener("DOMContentLoaded", function() {
         action: 'checkOnline',
     }, (response) => {
         if (response && response.online) {
-            okHeaderStatus.style.background = '#4caf50';
+            okHeaderStatus.style.background = '#4caf50'
         } else {
-            okHeaderStatus.style.background = '#f44336';
+            okHeaderStatus.style.background = '#f44336'
         }
     })
 

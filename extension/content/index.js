@@ -3,6 +3,7 @@ chrome.runtime.sendMessage({
 })
 
 $(document).ready(() => {
+    checkOnline();
     window.addEventListener("mousedown", (e) => {
         if (e && e.altKey) {
             e.preventDefault()
@@ -33,6 +34,7 @@ $(document).ready(() => {
                 console.log(target, target.currentSrc)
             }
             if (target && target.currentSrc) {
+                $(target).parent().children('.ok-loading').remove()
                 const loading = $('<div class="ok-loading"></div>')
                 loading.css('width', 'fit-content')
                 loading.css('position', 'absolute')
@@ -40,7 +42,7 @@ $(document).ready(() => {
                 loading.css('left', '0px')
                 loading.css('top', '0px')
                 loading.css('z-index', $(target).css('z-index'))
-                loading.css('color', 'white')  
+                loading.css('color', 'white')
                 loading.text('正在保存')
                 loading.css('background', '#cccccc80')
                 $(target).parent().append(loading)
@@ -136,3 +138,29 @@ function download({ target, loading, error }) {
         complete()
     }
 }
+
+const checkOnline = () => {
+    const okOnlineStatus = $('<div class="ok-online-status ok-float"></div>')
+    $('body').append(okOnlineStatus)
+    chrome.runtime.sendMessage({
+        action: 'checkOnline',
+    }, (response) => {
+        if (response && response.online) {
+            okOnlineStatus.css('background', '#4caf50')
+        } else {
+            okOnlineStatus.css('background', '#f44336')
+        }
+    })
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    const okOnlineStatus = $('.ok-online-status')
+    if (request.action === 'checkOnline') {
+        if (request.online) {
+            okOnlineStatus.css('background', '#4caf50')
+        } else {
+            okOnlineStatus.css('background', '#f44336')
+        }
+        sendResponse('Received checkOnline')
+    }
+});

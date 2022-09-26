@@ -137,8 +137,28 @@ setInterval(() => {
         .then((response) => response.json())
         .then((json) => {
             console.log(json)
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                if (tabs.length > 0) {
+                    chrome.tabs.sendMessage(tabs[0].id, {
+                        action: 'checkOnline',
+                        online: true
+                    }, (response) => {
+                        console.log(response)
+                    })
+                }
+            })
         })
         .catch(error => {
             console.log(error)
+            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+                if (tabs.length > 0) {
+                    chrome.tabs.sendMessage(tabs[0].id, {
+                        action: 'checkOnline',
+                        online: false
+                    }, (response) => {
+                        console.log(response)
+                    })
+                }
+            })
         })
 }, 5000)
