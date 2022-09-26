@@ -122,15 +122,31 @@ body {
     flex-direction: column;
 }
 
-.ok-title {
-    display: block;
-    width: 100%;
+.ok-header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+
     padding: 8px;
 
     background-color: black;
+}
+
+.ok-header-title {
+    display: block;
+    width: 100%;
+   
     color: white;
 
     white-space: nowrap;
+}
+
+.ok-header-status {
+    width: 8px;
+    height: 8px;
+
+    background-color: #D6D6E7;
+    border-radius: 4px;
 }
 
 .ok-dir {

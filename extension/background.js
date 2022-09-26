@@ -83,23 +83,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 const savePath = defaultDirectory + '\\' + filename
                 return fetch('http://127.0.0.1:8080/download?save_path=' + savePath + '&url=' + url)
-            }).then(response => {
-                return response.json()
-            }).then(json => {
+            })
+            .then(response => response.json())
+            .then(json => {
                 console.log(json)
                 sendResponse(json)
-            }).catch(error => {
+            })
+            .catch(error => {
                 console.log(error)
                 sendResponse({ error: error.message })
             })
     } else if (request.action === 'changeDefaultDirectory') {
         fetch('http://127.0.0.1:8080/changeDefaultDirectory')
-            .then(response => {
-                return response.json()
-            }).then(json => {
+            .then(response => response.json())
+            .then(json => {
                 console.log(json)
                 sendResponse(json)
-            }).catch(error => {
+            })
+            .catch(error => {
                 console.log(error)
                 sendResponse({ error: error.message })
             })
@@ -107,15 +108,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         fetchStorageConfig()
             .then((defaultDirectory) => {
                 return fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
-            }).then(response => {
-                return response.json()
-            }).then(json => {
+            }).then(response => response.json())
+            .then(json => {
                 console.log(json)
                 sendResponse(json)
-            }).catch(error => {
+            })
+            .catch(error => {
+                console.log(error)
+                sendResponse({ error: error.message })
+            })
+    } else if (request.action === 'checkOnline') {
+        fetch('http://127.0.0.1:8080/checkOnline')
+            .then((response) => response.json())
+            .then((json) => {
+                console.log(json)
+                sendResponse(json)
+            })
+            .catch(error => {
                 console.log(error)
                 sendResponse({ error: error.message })
             })
     }
     return !!request.action
 })
+
+setInterval(() => {
+    fetch('http://127.0.0.1:8080/checkOnline')
+        .then((response) => response.json())
+        .then((json) => {
+            console.log(json)
+        })
+        .catch(error => {
+            console.log(error)
+        })
+}, 5000)

@@ -102,6 +102,10 @@ async fn show_default_directory(query: web::Query<HashMap<String, String>>) -> i
     HttpResponse::Ok().json(json!({ "defaultDirectory": default_directory }))
 }
 
+async fn check_online() -> impl Responder {
+    HttpResponse::Ok().json(json!({ "online": true }))
+}
+
 #[actix_web::main]
 async fn start_server() -> std::io::Result<()> {
 
@@ -114,6 +118,7 @@ async fn start_server() -> std::io::Result<()> {
             .route("/download", web::get().to(download))
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
+            .route("/checkOnline", web::get().to(check_online))
     })
     .bind(("127.0.0.1", 8080))?
     .run()
