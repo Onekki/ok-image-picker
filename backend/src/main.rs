@@ -35,10 +35,6 @@ use std::{
     env::current_exe
 };
 
-fn abspath(p: &str) -> String {
-    shellexpand::full(p).ok().unwrap().to_string()
-}
-
 async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder {
     let save_path = match query.get("save_path") {
         Some(result) => result,
@@ -58,7 +54,7 @@ async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder 
             "error": format!("{:?}", error)
         }))
     };
-    let mut file = match File::create(abspath(save_path)) {
+    let mut file = match File::create(save_path) {
         Ok(result) => result,
         Err(error) => return HttpResponse::Ok().json(json!({
             "error": format!("{:?}", error)
@@ -87,16 +83,17 @@ async fn change_default_directory() -> impl Responder {
         .set_location("~/Desktop")
         .show_open_single_dir()
         .unwrap();
-    let directory = abspath(directory.unwrap().to_str().unwrap());
-    println!("{}", directory);
-    HttpResponse::Ok().json(json!({ "defaultDirectory": directory }))
+    match directory {
+        None => HttpResponse::Ok().json(json!({ "error": "Folder not picked!" })),
+        Some(du) => HttpResponse::Ok().json(json!({ "defaultDirectory": du.to_str().unwrap() }))
+    }
 }
 
 async fn show_default_directory(query: web::Query<HashMap<String, String>>) -> impl Responder {
     let default_directory = query.get("defaultDirectory").unwrap();
     println!("{}", default_directory);
     Command::new("explorer")
-        .arg(abspath(default_directory))
+        .arg(default_directory)
         .spawn()
         .unwrap();
     HttpResponse::Ok().json(json!({ "defaultDirectory": default_directory }))
