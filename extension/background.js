@@ -1,7 +1,5 @@
-let cacheRules = { rule_version: 0 }
-
-function fetchStorageConfig() {
-    return new Promise((resolve, reject) => {
+const fetchStorageConfig = () => {
+    return new Promise((resolve) => {
         chrome.storage.local.get('defaultDirectory', (result) => {
             console.log(result)
             if (result && result.defaultDirectory) {
@@ -13,152 +11,116 @@ function fetchStorageConfig() {
     })
 }
 
-function fetchAssetsRules() {
-    const sieveURL = chrome.runtime.getURL('assets/sieve.json')
-    return fetch(sieveURL).then((response) => {
-        return response.json()
-    }).then(json => {
-        console.log('fetchAssetsConfig', json)
-        if (json && json.rule_version && 
-            cacheRules && cacheRules.rule_version && 
-            cacheRules.rule_version < json.rule_version) {
-            cacheRules = json;
-        }
-    })
+const getSuggestedFilename = async (url) => {
+    try {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const type = blob.type.replace(/.*\//, '')
+        let filename = url.replace(/[?#].*/, '').replace(/.*[\/]/, '').replace(/\+/g, ' ')
+            .replace(/[\x00-\x7f]+/g, (s) => s.replace(/[^\w\-\.\,@ ]+/g, ''))
+        while (filename.match(/\.[^0-9a-z]*\./)) 
+            filename = filename.replace(/\.[^0-9a-z]*\./g, '.')
+        filename = filename.replace(/\s\s+/g, ' ').trim()
+            .replace(/\.(jpe?g|png|gif|webp|svg)$/gi, '').trim()
+            .replace(/[^0-9a-z]+$/i, '').trim()
+        if (!filename) filename = new Date().getTime()
+        return filename + '.' + type
+    } catch (e) {
+        return url.split('?')[0].split('/').pop()
+            .replace(/\.png.*/, '.png').replace(/\.jpg.*/, '.jpg')
+            .replace(/\.jpeg.*/, '.jpeg').replace(/\.bmp.*/, '.bmp')
+            .replace(/\.gif.*/, '.gif').replace('\.webp.*', '.webp')
+    }
 }
-
-function fetchRemoteRules() {
-    const remoteSieveURL = 'https://billfish-resource-oss.oss-cn-hangzhou.aliyuncs.com/extension/sieve.json'
-    return fetch(remoteSieveURL).then((response) => {
-        return response.json()
-    }).then((json) => {
-        console.log('fetchRemoteConfig', json)
-        if (json && json.rule_version &&
-            cacheRules && cacheRules.rule_version && 
-            cacheRules.rule_version < json.rule_version) {
-            cacheRules = json;
-        }
-    })
-}
-
-function convertSrc(src) {
-    if (-1 < src.indexOf('data:image'))
-        return src;
-    if (cacheRules && cacheRules.rules)
-        for (var i = 0; i < cacheRules.rules.length; i++)
-            try {
-                var rule = cacheRules.rules[i]
-                  , srcPattern = rule.srcPattern
-                  , replaceRule = rule.replaceRule
-                  , reg = RegExp(srcPattern);
-                if (reg.test(src)) {
-                    var newSrc, script = replaceRule.replace('"@"', 'src');
-                    return eval('newSrc = '.concat(script)),
-                    newSrc
-                }
-            } catch (err) {
-                return src
-            }
-    console.log(src)
-    return src
-}
-
-fetchAssetsRules().then(() => fetchRemoteRules())
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(request, sender)
-    if (request.action === 'checkRulesUpdate') {
-        fetchAssetsRules().then(() => fetchRemoteRules())
-    } else if (request.action === 'download') {
-        fetchStorageConfig()
-            .then((defaultDirectory) => {
-                const url = convertSrc(request.url)
-                console.log(url)
-                let filename = url.split('?')[0].split('/').pop()
-                    .replace(/\.png.*/, '.png').replace(/\.jpg.*/, '.jpg')
-                    .replace(/\.jpeg.*/, '.jpeg').replace(/\.bmp.*/, '.bmp')
-                    .replace(/\.gif.*/, '.gif').replace('\.webp.*', '.webp')
-                if (url.includes('huaban.com')) {
-                    filename = filename.replace('webp', '.webp')
-                }
-                const savePath = defaultDirectory + '\\' + filename
-                return fetch('http://127.0.0.1:8080/download?save_path=' + savePath + '&url=' + url)
-            })
-            .then(response => response.json())
-            .then(json => {
+    if (request.action === 'download') {
+        console.log('456', request.base64)
+        const download = async () => {
+            try {
+                const defaultDirectory = await fetchStorageConfig()
+                const filename = await getSuggestedFilename(request.url)
+                const response = await fetch(`http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${request.url}`)
+                const json = await response.json()
                 console.log(json)
                 sendResponse(json)
-            })
-            .catch(error => {
-                console.log(error)
+            } catch (error) {
+                console.dir(error)
                 sendResponse({ error: error.message })
-            })
+            }
+        }
+        download()
     } else if (request.action === 'changeDefaultDirectory') {
-        fetch('http://127.0.0.1:8080/changeDefaultDirectory')
-            .then(response => response.json())
-            .then(json => {
+        const changeDefaultDirectory = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/changeDefaultDirectory')
+                const json = await response.json()
                 console.log(json)
                 sendResponse(json)
-            })
-            .catch(error => {
-                console.log(error)
+            } catch (error) {
+                console.error(error)
                 sendResponse({ error: error.message })
-            })
+            }
+        }
+        changeDefaultDirectory()
     } else if (request.action === 'showDefaultDirectory') {
-        fetchStorageConfig()
-            .then((defaultDirectory) => {
-                return fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
-            }).then(response => response.json())
-            .then(json => {
+        const showDefaultDirectory = async () => {
+            try{
+                const defaultDirectory = await fetchStorageConfig()
+                const response = await fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
+                const json = await response.json()
                 console.log(json)
                 sendResponse(json)
-            })
-            .catch(error => {
-                console.log(error)
+            } catch (error) {
+                console.error(error)
                 sendResponse({ error: error.message })
-            })
+            }
+        }
+        showDefaultDirectory()
     } else if (request.action === 'checkOnline') {
-        fetch('http://127.0.0.1:8080/checkOnline')
-            .then((response) => response.json())
-            .then((json) => {
+        const checkOnline = async () => {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/checkOnline')
+                const json = await response.json()
                 console.log(json)
                 sendResponse(json)
-            })
-            .catch(error => {
-                console.log(error)
+            } catch (error) {
+                console.error(error)
                 sendResponse({ error: error.message })
-            })
+            }
+        }
+        checkOnline()
     }
     return !!request.action
 })
 
-setInterval(() => {
-    fetch('http://127.0.0.1:8080/checkOnline')
-        .then((response) => response.json())
-        .then((json) => {
-            console.log(json)
-            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                if (tabs.length > 0) {
-                    chrome.tabs.sendMessage(tabs[0].id, {
-                        action: 'checkOnline',
-                        online: true
-                    }, (response) => {
-                        console.log(response)
-                    })
-                }
-            })
+setInterval(async () => {
+    try {
+        const response = await fetch('http://127.0.0.1:8080/checkOnline')
+        const json = await response.json()
+        console.log(json)
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'checkOnline',
+                    online: true
+                }, (response) => {
+                    console.log(response)
+                })
+            }
         })
-        .catch(error => {
-            console.log(error)
-            chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-                if (tabs.length > 0) {
-                    chrome.tabs.sendMessage(tabs[0].id, {
-                        action: 'checkOnline',
-                        online: false
-                    }, (response) => {
-                        console.log(response)
-                    })
-                }
-            })
+    } catch (error) {
+        console.error(error)
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+            if (tabs.length > 0) {
+                chrome.tabs.sendMessage(tabs[0].id, {
+                    action: 'checkOnline',
+                    online: false
+                }, (response) => {
+                    console.log(response)
+                })
+            }
         })
+    }
 }, 5000)

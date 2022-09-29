@@ -31,15 +31,22 @@ use std::{
     fs::File, 
     io::Write, 
     thread, 
+    path::Path,
     process::Command,
     env::current_exe
 };
 
 async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder {
-    let save_path = match query.get("save_path") {
+    let default_directory = match query.get("defaultDirectory") {
         Some(result) => result,
         None => return HttpResponse::BadRequest().json(json!({
-            "error": "参数错误：save_path"
+            "error": "参数错误：defaultDirectory"
+        }))
+    };
+    let filename = match query.get("filename") {
+        Some(result) => result,
+        None => return HttpResponse::BadRequest().json(json!({
+            "error": "参数错误：filename"
         }))
     };
     let url = match query.get("url") {
@@ -48,13 +55,14 @@ async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder 
             "error": "参数错误：url"
         }))
     };
-    let response = match reqwest::get(url).await {
+    let path = Path::new(default_directory).join(filename);
+    let mut file = match File::create(path.clone()) {
         Ok(result) => result,
         Err(error) => return HttpResponse::Ok().json(json!({
             "error": format!("{:?}", error)
         }))
     };
-    let mut file = match File::create(save_path) {
+    let response = match reqwest::get(url).await {
         Ok(result) => result,
         Err(error) => return HttpResponse::Ok().json(json!({
             "error": format!("{:?}", error)
@@ -73,8 +81,7 @@ async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder 
         }))
     };
     HttpResponse::Ok().json(json!({
-        "save_path": save_path,
-        "url": url
+        "file": format!("{:?}", path.to_string_lossy())
     }))
 }
 
@@ -111,7 +118,7 @@ async fn start_server() -> std::io::Result<()> {
 
     HttpServer::new(|| {
         App::new()
-            .wrap(Logger::default())
+            .wrap(Logger::default().exclude("/checkOnline"))
             .route("/download", web::get().to(download))
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
