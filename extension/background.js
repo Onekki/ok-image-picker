@@ -1,24 +1,18 @@
 const fetchStorageConfig = () => {
     return new Promise((resolve) => {
-        chrome.storage.local.get('defaultDirectory', (result) => {
-            console.log(result)
-            if (result && result.defaultDirectory) {
-                resolve(result.defaultDirectory)
-            } else {
-                resolve('~\\Downloads')
-            }
-        })
+        chrome.storage.local.get(['defaultDirectory', 'imageType'], 
+            (result) => resolve(result))
     })
 }
 
-const getSuggestedFilename = async (url) => {
+const getSuggestedFilename = async (url, type) => {
     try {
         const response = await fetch(url)
         const blob = await response.blob()
-        const type = blob.type.replace(/.*\//, '')
+        if (!type) type = blob.type.replace(/.*\//, '')
         let filename = url.replace(/[?#].*/, '').replace(/.*[\/]/, '').replace(/\+/g, ' ')
             .replace(/[\x00-\x7f]+/g, (s) => s.replace(/[^\w\-\.\,@ ]+/g, ''))
-        while (filename.match(/\.[^0-9a-z]*\./)) 
+        while (filename.match(/\.[^0-9a-z]*\./))
             filename = filename.replace(/\.[^0-9a-z]*\./g, '.')
         filename = filename.replace(/\s\s+/g, ' ').trim()
             .replace(/\.(jpe?g|png|gif|webp|svg)$/gi, '').trim()
@@ -33,18 +27,69 @@ const getSuggestedFilename = async (url) => {
     }
 }
 
+const canvas = new OffscreenCanvas(0, 0)
+const context = canvas.getContext('2d')
+const getBase64 = async (width, height, url, type) => {
+    try {
+        const response = await fetch(url)
+        const blob = await response.blob()
+        const bitmap = await createImageBitmap(blob)
+        console.log(bitmap)
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        canvas.width = width
+        canvas.height = height
+        context.drawImage(bitmap, 0, 0, width, height)
+        const newBlob = await canvas.convertToBlob({ 
+            type: `image/${type}`
+        })
+        const reader = new FileReader()
+        reader.readAsDataURL(newBlob)
+        return new Promise((resolve) => {
+            reader.onloadend = () => {
+                resolve(reader.result)
+            }
+        })
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(request, sender)
     if (request.action === 'download') {
-        console.log('456', request.base64)
         const download = async () => {
             try {
-                const defaultDirectory = await fetchStorageConfig()
-                const filename = await getSuggestedFilename(request.url)
-                const response = await fetch(`http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${request.url}`)
-                const json = await response.json()
-                console.log(json)
-                sendResponse(json)
+                const { width, height, url } = request
+                const config = await fetchStorageConfig()
+                const defaultDirectory = config.defaultDirectory
+                if (!defaultDirectory) {
+                    sendResponse({ error: '请先设置下载文件夹' })
+                    return
+                }
+                const imageType = config.imageType
+                if (config.imageType) {
+                    const filename = await getSuggestedFilename(url, imageType)
+                    const base64 = await getBase64(width, height, url, imageType)
+                    const base64Array = base64.split(',')
+                    const fetchUrl = `http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${base64Array[0]}`
+                    const response = await fetch(fetchUrl, {
+                        method: 'POST',
+                        body: base64Array.pop(),
+                        duplex: 'half'
+                    })
+                    const json = await response.json()
+                    console.log(json)
+                    sendResponse(json)
+                } else {
+                    const filename = await getSuggestedFilename(request.url)
+                    const fetchUrl = `http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${url}`
+                    response = await fetch(fetchUrl, {
+                        method: 'POST'
+                    })
+                    const json = await response.json()
+                    console.log(json)
+                    sendResponse(json)
+                }
             } catch (error) {
                 console.dir(error)
                 sendResponse({ error: error.message })
@@ -66,7 +111,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         changeDefaultDirectory()
     } else if (request.action === 'showDefaultDirectory') {
         const showDefaultDirectory = async () => {
-            try{
+            try {
                 const defaultDirectory = await fetchStorageConfig()
                 const response = await fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
                 const json = await response.json()
@@ -98,8 +143,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 setInterval(async () => {
     try {
         const response = await fetch('http://127.0.0.1:8080/checkOnline')
-        const json = await response.json()
-        console.log(json)
+        await response.json()
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs.length > 0) {
                 chrome.tabs.sendMessage(tabs[0].id, {

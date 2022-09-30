@@ -1,23 +1,5 @@
 $(document).ready(() => {
     checkOnline()
-
-    const canvas = document.createElement('canvas')
-    const context = canvas.getContext('2d')
-    const getBase64 = (target, type) => {
-        canvas.width = target.width
-        canvas.height = target.height
-        return new Promise((resolve) => {
-            const image = new Image()
-            image.src = target.currentSrc
-            image.crossOrigin = 'anonymous'
-            image.onload = () => {
-                context.drawImage(image, 0, 0, canvas.width, canvas.height)
-                const mimeType = `image/${type !== 'jpg' ? type : 'jpeg'}`
-                const base64 = canvas.toDataURL(mimeType)
-                resolve(base64)
-            }
-        })
-    }
     
     window.addEventListener("mousedown", (e) => {
         if (e && e.altKey) {
@@ -27,7 +9,7 @@ $(document).ready(() => {
             return false
         }
     })
-    window.addEventListener("mouseup", async (e) => {
+    window.addEventListener("mouseup", (e) => {
         if (e && e.altKey) {
             e.preventDefault()
             e.stopPropagation()
@@ -65,7 +47,8 @@ $(document).ready(() => {
                 chrome.runtime.sendMessage({
                     action: 'download',
                     url: target.currentSrc,
-                    base64: await getBase64(target, 'png')
+                    width: target.width,
+                    height: target.height
                 }, response => {
                     console.log(response)
                     if (response.error) {

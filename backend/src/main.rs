@@ -6,6 +6,7 @@ use actix_web::{
     Responder,
     middleware::Logger
 };
+use futures::StreamExt;
 use serde_json::json;
 use tao::{
     event::Event,
@@ -36,7 +37,14 @@ use std::{
     env::current_exe
 };
 
-async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder {
+async fn index() -> impl Responder {
+    HttpResponse::Ok().json(json!({
+        "message": "Ok"
+    }))
+}
+
+async fn download(query: web::Query<HashMap<String, String>>,
+    mut body: web::Payload) -> impl Responder {
     let default_directory = match query.get("defaultDirectory") {
         Some(result) => result,
         None => return HttpResponse::BadRequest().json(json!({
@@ -62,24 +70,39 @@ async fn download(query: web::Query<HashMap<String, String>>) -> impl Responder 
             "error": format!("{:?}", error)
         }))
     };
-    let response = match reqwest::get(url).await {
-        Ok(result) => result,
-        Err(error) => return HttpResponse::Ok().json(json!({
-            "error": format!("{:?}", error)
-        }))
-    };
-    let mut contents = match response.bytes().await {
-        Ok(result) => result,
-        Err(error) => return HttpResponse::Ok().json(json!({
-            "error": format!("{:?}", error)
-        }))
-    };
-    match file.write_all(&mut contents) {
-        Ok(result) => result,
-        Err(error) => return HttpResponse::Ok().json(json!({
-            "error": format!("{:?}", error)
-        }))
-    };
+    if url.starts_with("data:") {
+        let mut contents = web::BytesMut::new();
+        while let Some(item) = body.next().await {
+            let item = item.unwrap();
+            contents.extend_from_slice(&item);
+        }
+        let mut contents = base64::decode(contents).unwrap();
+        match file.write_all(&mut contents) {
+            Ok(result) => result,
+            Err(error) => return HttpResponse::Ok().json(json!({
+                "error": format!("{:?}", error)
+            }))
+        };
+    } else {
+        let response = match reqwest::get(url).await {
+            Ok(result) => result,
+            Err(error) => return HttpResponse::Ok().json(json!({
+                "error": format!("{:?}", error)
+            }))
+        };
+        let mut contents = match response.bytes().await {
+            Ok(result) => result,
+            Err(error) => return HttpResponse::Ok().json(json!({
+                "error": format!("{:?}", error)
+            }))
+        };
+        match file.write_all(&mut contents) {
+            Ok(result) => result,
+            Err(error) => return HttpResponse::Ok().json(json!({
+                "error": format!("{:?}", error)
+            }))
+        };
+    }
     HttpResponse::Ok().json(json!({
         "file": format!("{:?}", path.to_string_lossy())
     }))
@@ -119,10 +142,11 @@ async fn start_server() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .wrap(Logger::default().exclude("/checkOnline"))
-            .route("/download", web::get().to(download))
+            .route("/download", web::post().to(download))
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
             .route("/checkOnline", web::get().to(check_online))
+            .route("/", web::post().to(index))
     })
     .bind(("127.0.0.1", 8080))?
     .run()

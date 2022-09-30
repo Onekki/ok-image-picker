@@ -13,13 +13,20 @@ document.addEventListener("DOMContentLoaded", function() {
     })
 
     const okDirValue = document.querySelector('.ok-dir-value')
-    chrome.storage.local.get('defaultDirectory', (result) => {
-        console.log(result)
+    const okTypeValueSwitch = document.querySelector('.ok-type-value .switch-input')
+    chrome.storage.local.get(['defaultDirectory', 'imageType'], (result) => {
         if (result && result.defaultDirectory) {
             okDirValue.innerHTML = result.defaultDirectory
         } else {
-            okDirValue.innerHTML = '~\\Downloads'
+            okDirValue.innerHTML = '未设置'
         }
+        okTypeValueSwitch.checked = result && result.imageType
+    })
+    const okTypeValue = document.querySelector('.ok-type-value')
+    okTypeValue.addEventListener('click', async () => {
+        chrome.storage.local.set({ 
+            'imageType': okTypeValueSwitch.checked ? 'png' : null
+        })
     })
 
     const okChangeDir = document.querySelector('.ok-change-dir')
