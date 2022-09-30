@@ -62,7 +62,7 @@
     <Product
         Id='*'
         Name='ok-image-picker'
-        UpgradeCode='F5D2FF43-050E-47E8-A185-A66FFF394364'
+        UpgradeCode='32090004-A2F0-466F-8561-E4A33B8296FD'
         Manufacturer='zhuwangqi@foxmail.com'
         Language='1033'
         Codepage='1252'
@@ -110,7 +110,7 @@
                     -->
 
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='D5663588-24F7-4C55-A7BB-A4718664B6EF' KeyPath='yes'>
+                        <Component Id='Path' Guid='0689E827-9137-4C31-9FC5-0D0C1686CB98' KeyPath='yes'>
                             <Environment
                                 Id='PATH'
                                 Name='PATH'
@@ -131,7 +131,23 @@
                     </Directory>
                 </Directory>
             </Directory>
+
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="ApplicationProgramsFolder" Name="MieMie"/>
+            </Directory>
         </Directory>
+
+        <DirectoryRef Id="ApplicationProgramsFolder">
+            <Component Id="ApplicationShortcut" Guid="*">
+                <Shortcut Id="ApplicationStartMenuShortcut" 
+                        Name="MieMie"
+                        Description="MieMie Downloader"
+                        Target="[APPLICATIONFOLDER]bin\ok-image-picker.exe"
+                        WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
+                <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
+                <RegistryValue Root="HKCU" Key="Software\Onekki\MieMie" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+            </Component>
+        </DirectoryRef>
 
         <Feature
             Id='Binaries'
@@ -150,6 +166,8 @@
             <!--<ComponentRef Id='License'/>-->
 
             <ComponentRef Id='binary0'/>
+
+            <ComponentRef Id="ApplicationShortcut" />
 
             <Feature
                 Id='Environment'
