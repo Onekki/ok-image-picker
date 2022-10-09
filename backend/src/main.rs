@@ -33,8 +33,7 @@ use std::{
     io::Write, 
     thread, 
     path::Path,
-    process::Command,
-    env::current_exe
+    process::Command
 };
 
 async fn index() -> impl Responder {
@@ -158,12 +157,8 @@ async fn start_server() -> std::io::Result<()> {
 fn main() {
     thread::spawn(start_server);
 
-    let app_name = "咩咩采集-下载器";
-
-    let current_exe = current_exe();
-    let app_path = current_exe.unwrap()
-        .canonicalize().unwrap()
-        .display().to_string();
+    let app_name = "咩咩下载器";
+    let app_path = "ok-image-picker.exe";
 
     let auto = AutoLaunchBuilder::new()
         .set_app_name(app_name)
@@ -194,7 +189,7 @@ fn main() {
 
     let system_tray = SystemTrayBuilder::new(icon.clone(), Some(tray_menu))
         .with_id(main_tray_id)
-        .with_tooltip("咩咩采集-下载器")
+        .with_tooltip(app_name)
         .build(&event_loop)
         .unwrap();
 

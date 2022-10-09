@@ -25,3 +25,12 @@ auto-launch = "0.3.0"
 [features]
 default = [ "tray" ]
 tray = ["tao/tray"]
+
+[package.metadata.wix]
+culture = "zh-CN"
+input = "wix/main.wxs"
+locale = "wix/locales/zh-CN.wxl"
+name = "咩咩采集"
+no-build = false
+output = "target/wix/installer.msi"
+version = "1.0.0"

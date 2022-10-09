@@ -61,21 +61,21 @@
 
     <Product
         Id='*'
-        Name='ok-image-picker'
+        Name='!(loc.ProductName)'
         UpgradeCode='32090004-A2F0-466F-8561-E4A33B8296FD'
         Manufacturer='zhuwangqi@foxmail.com'
-        Language='1033'
-        Codepage='1252'
+        Language='2052'
+        Codepage='936'
         Version='$(var.Version)'>
 
         <Package Id='*'
             Keywords='Installer'
             Manufacturer='zhuwangqi@foxmail.com'
             InstallerVersion='450'
-            Languages='1033'
+            Languages='2052'
             Compressed='yes'
             InstallScope='perMachine'
-            SummaryCodepage='1252'
+            SummaryCodepage='936'
             />
 
         <MajorUpgrade
@@ -133,19 +133,19 @@
             </Directory>
 
             <Directory Id="ProgramMenuFolder">
-                <Directory Id="ApplicationProgramsFolder" Name="MieMie"/>
+                <Directory Id="ApplicationProgramsFolder" Name="!(loc.ProductName)"/>
             </Directory>
         </Directory>
 
         <DirectoryRef Id="ApplicationProgramsFolder">
             <Component Id="ApplicationShortcut" Guid="*">
                 <Shortcut Id="ApplicationStartMenuShortcut" 
-                        Name="MieMie"
-                        Description="MieMie Downloader"
+                        Name="!(loc.ProductName)"
+                        Description="!(loc.ProductName)"
                         Target="[APPLICATIONFOLDER]bin\ok-image-picker.exe"
                         WorkingDirectory="APPLICATIONROOTDIRECTORY"/>
                 <RemoveFolder Id="CleanUpShortCut" Directory="ApplicationProgramsFolder" On="uninstall"/>
-                <RegistryValue Root="HKCU" Key="Software\Onekki\MieMie" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
+                <RegistryValue Root="HKCU" Key="Software\Onekki\!(loc.ProductName)" Name="installed" Type="integer" Value="1" KeyPath="yes"/>
             </Component>
         </DirectoryRef>
 

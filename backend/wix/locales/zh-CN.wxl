@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WixLocalization xmlns="http://schemas.microsoft.com/wix/2006/localization" Culture="zh-cn">
+    <String Id="ProductName" Overridable="yes">咩咩下载器</String>
+</WixLocalization>
