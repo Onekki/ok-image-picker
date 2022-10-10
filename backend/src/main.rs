@@ -164,6 +164,8 @@ fn main() {
 
     let app_name = "咩咩下载器";
     let app_path = "ok-image-picker.exe";
+    let app_version = env!("CARGO_PKG_VERSION");
+    let app_name_version = format!("{} v{}", app_name, app_version);
 
     let auto = AutoLaunchBuilder::new()
         .set_app_name(app_name)
@@ -188,13 +190,15 @@ fn main() {
     let main_tray_id = TrayId::new("main-tray");
     let mut tray_menu = Menu::new();
 
-    let quit = tray_menu.add_item(MenuItemAttributes::new("退出应用"));
+    tray_menu.add_item(MenuItemAttributes::new(&app_name_version).with_enabled(false));
+    tray_menu.add_item(MenuItemAttributes::new("开机自启动").with_enabled(false).with_selected(true));
+    let mi_quit = tray_menu.add_item(MenuItemAttributes::new("退出应用"));
 
     let event_loop = EventLoop::new();
 
     let system_tray = SystemTrayBuilder::new(icon.clone(), Some(tray_menu))
         .with_id(main_tray_id)
-        .with_tooltip(app_name)
+        .with_tooltip(&app_name_version)
         .build(&event_loop)
         .unwrap();
 
@@ -223,7 +227,7 @@ fn main() {
                 origin,
                 ..
             } => {
-                if menu_id == quit.clone().id() {
+                if menu_id == mi_quit.clone().id() {
                     system_tray.take();
                     *control_flow = ControlFlow::Exit;
                 } else {
