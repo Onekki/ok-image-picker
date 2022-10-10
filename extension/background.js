@@ -54,6 +54,7 @@ const getBase64 = async (width, height, url, type) => {
     }
 }
 
+const BASE_URL = 'http://127.0.0.1:6625/'
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     console.log(request, sender)
     if (request.action === 'download') {
@@ -71,7 +72,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     const filename = await getSuggestedFilename(url, imageType)
                     const base64 = await getBase64(width, height, url, imageType)
                     const base64Array = base64.split(',')
-                    const fetchUrl = `http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${base64Array[0]}`
+                    const fetchUrl = `${BASE_URL}download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${base64Array[0]}`
                     const response = await fetch(fetchUrl, {
                         method: 'POST',
                         body: base64Array.pop(),
@@ -82,7 +83,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     sendResponse(json)
                 } else {
                     const filename = await getSuggestedFilename(request.url)
-                    const fetchUrl = `http://127.0.0.1:8080/download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${url}`
+                    const fetchUrl = `${BASE_URL}download?defaultDirectory=${defaultDirectory}&filename=${filename}&url=${url}`
                     response = await fetch(fetchUrl, {
                         method: 'POST'
                     })
@@ -99,7 +100,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'changeDefaultDirectory') {
         const changeDefaultDirectory = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8080/changeDefaultDirectory')
+                const response = await fetch(`${BASE_URL}changeDefaultDirectory`)
                 const json = await response.json()
                 console.log(json)
                 sendResponse(json)
@@ -113,7 +114,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         const showDefaultDirectory = async () => {
             try {
                 const defaultDirectory = await fetchStorageConfig()
-                const response = await fetch('http://127.0.0.1:8080/showDefaultDirectory?defaultDirectory=' + defaultDirectory)
+                const response = await fetch(`${BASE_URL}showDefaultDirectory?defaultDirectory=${defaultDirectory}`)
                 const json = await response.json()
                 console.log(json)
                 sendResponse(json)
@@ -126,7 +127,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'checkOnline') {
         const checkOnline = async () => {
             try {
-                const response = await fetch('http://127.0.0.1:8080/checkOnline')
+                const response = await fetch(`${BASE_URL}checkOnline`)
                 const json = await response.json()
                 console.log(json)
                 sendResponse(json)
@@ -142,7 +143,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 setInterval(async () => {
     try {
-        const response = await fetch('http://127.0.0.1:8080/checkOnline')
+        const response = await fetch(`${BASE_URL}checkOnline`)
         await response.json()
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
             if (tabs.length > 0) {

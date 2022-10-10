@@ -145,9 +145,9 @@ async fn start_server() -> std::io::Result<()> {
             .route("/changeDefaultDirectory", web::get().to(change_default_directory))
             .route("/showDefaultDirectory", web::get().to(show_default_directory))
             .route("/checkOnline", web::get().to(check_online))
-            .route("/", web::post().to(index))
+            .route("/", web::get().to(index))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 6625))?
     .run()
     .await
 }
@@ -155,6 +155,11 @@ async fn start_server() -> std::io::Result<()> {
 #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
 #[cfg(any(feature = "tray", all(target_os = "linux", feature = "ayatana")))]
 fn main() {
+    let response = reqwest::blocking::get("http://127.0.0.1:6625/").unwrap();
+    if response.status().is_success() {
+        return;
+    }
+
     thread::spawn(start_server);
 
     let app_name = "咩咩下载器";
