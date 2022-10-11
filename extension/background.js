@@ -113,7 +113,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'showDefaultDirectory') {
         const showDefaultDirectory = async () => {
             try {
-                const defaultDirectory = await fetchStorageConfig()
+                const config = await fetchStorageConfig()
+                const defaultDirectory = config.defaultDirectory
                 const response = await fetch(`${BASE_URL}showDefaultDirectory?defaultDirectory=${defaultDirectory}`)
                 const json = await response.json()
                 console.log(json)
