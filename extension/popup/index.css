@@ -3,6 +3,10 @@ body {
     margin: 0;
 }
 
+.ok-space {
+    flex: 1;
+}
+
 /* CSS */
 .button-30 {
     align-items: center;
@@ -174,12 +178,19 @@ body {
 }
 
 .ok-header-title {
-    display: block;
-    width: 100%;
+    display: flex;
 
     color: white;
-
     white-space: nowrap;
+    cursor: pointer;
+}
+
+.ok-header-info {
+    display: flex;
+    align-items: center;
+    margin-left: 4px;
+
+    cursor: pointer;
 }
 
 .ok-header-status {

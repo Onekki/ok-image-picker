@@ -1,45 +1,44 @@
-document.addEventListener("DOMContentLoaded", function() {
-    console.log("DOMContentLoaded")
+$(document).ready(() => {
+    $('body').on('click', 'a', function(){
+        chrome.tabs.create({url: $(this).attr('href')})
+        return false
+    })
 
-    const okHeaderStatus = document.querySelector('.ok-header-status')
     chrome.runtime.sendMessage({
         action: 'checkOnline',
     }, (response) => {
         if (response && response.online) {
-            okHeaderStatus.style.background = '#4caf50'
+            $('.ok-header-status').css('background', '#4caf50')
         } else {
-            okHeaderStatus.style.background = '#f44336'
+            $('.ok-header-status').css('background', '#f44336')
         }
     })
 
-    const okDirValue = document.querySelector('.ok-dir-value')
-    const okTypeValueSwitch = document.querySelector('.ok-type-value .switch-input')
     chrome.storage.local.get(['defaultDirectory', 'imageType'], (result) => {
         if (result && result.defaultDirectory) {
-            okDirValue.innerHTML = result.defaultDirectory
+            $('.ok-dir-value').text(result.defaultDirectory)
         } else {
-            okDirValue.innerHTML = '未设置'
+            $('.ok-dir-value').text('未设置')
         }
-        okTypeValueSwitch.checked = result && result.imageType
+        $('.ok-type-value .switch-input').attr('checked', result && result.imageType)
     })
-    const okTypeValue = document.querySelector('.ok-type-value')
-    okTypeValue.addEventListener('click', async () => {
+
+    $('.ok-type-value').click(() => {
         chrome.storage.local.set({ 
-            'imageType': okTypeValueSwitch.checked ? 'png' : null
+            'imageType': $('.ok-type-value .switch-input').attr('checked') ? 'png' : null
+            
         })
     })
 
-    const okChangeDir = document.querySelector('.ok-change-dir')
-    okChangeDir.addEventListener('click', async () => {
+    $('.ok-change-dir').click(() => {
         chrome.runtime.sendMessage({
             action: 'changeDefaultDirectory'
         }, (response) => {
             if (response && response.defaultDirectory) {
                 chrome.storage.local.set({ 'defaultDirectory': response.defaultDirectory }, () => {
-                    okDirValue.innerHTML = response.defaultDirectory
+                    $('.ok-dir-value').text(response.defaultDirectory)
                 })
             }
         })
-        return true
     })
 })
