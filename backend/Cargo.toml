@@ -3,7 +3,7 @@ name = "ok-image-picker"
 version = "1.0.0"
 edition = "2021"
 build = "build.rs"
-authors = ["zhuwangqi@foxmail.com"]
+authors = ["Onekki"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [build-dependencies]
@@ -30,7 +30,5 @@ tray = ["tao/tray"]
 culture = "zh-CN"
 input = "wix/main.wxs"
 locale = "wix/locales/zh-CN.wxl"
-name = "咩咩采集"
 no-build = false
 output = "target/wix/installer.msi"
-version = "1.0.0"

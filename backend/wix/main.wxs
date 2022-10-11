@@ -63,14 +63,14 @@
         Id='*'
         Name='!(loc.ProductName)'
         UpgradeCode='32090004-A2F0-466F-8561-E4A33B8296FD'
-        Manufacturer='zhuwangqi@foxmail.com'
+        Manufacturer='Onekki'
         Language='2052'
         Codepage='936'
         Version='$(var.Version)'>
 
         <Package Id='*'
             Keywords='Installer'
-            Manufacturer='zhuwangqi@foxmail.com'
+            Manufacturer='Onekki'
             InstallerVersion='450'
             Languages='2052'
             Compressed='yes'

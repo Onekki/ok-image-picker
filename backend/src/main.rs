@@ -1,3 +1,5 @@
+#![windows_subsystem = "windows"]
+
 use actix_web::{
     web, 
     App, 
@@ -33,7 +35,8 @@ use std::{
     io::Write, 
     thread, 
     path::Path,
-    process::Command
+    process::Command,
+    env::current_exe
 };
 
 async fn index() -> impl Responder {
@@ -163,14 +166,13 @@ fn main() {
     thread::spawn(start_server);
 
     let app_name = "咩咩下载器";
-    let app_path = "ok-image-picker.exe";
+    let app_path = current_exe().unwrap().display().to_string();
     let app_version = env!("CARGO_PKG_VERSION");
     let app_name_version = format!("{} v{}", app_name, app_version);
 
     let auto = AutoLaunchBuilder::new()
         .set_app_name(app_name)
         .set_app_path(&app_path)
-        .set_use_launch_agent(true)
         .build()
         .unwrap();
 
